@@ -23,7 +23,10 @@ parser.add_argument("validation_split_size",
                     type=float)
 
 args_ = parser.parse_args()
-
+print("args path X: ", args_.X)
+print("args path y: ", args_.y)
+print("validate?: ", args_.validate)
+print("validation_split_size: ", args_.validation_split_size)
 
 # Called after parse args so if a arg parse error occurs,
 # tf warnings and sklearn deprecation messages do not appear -> clear info
@@ -48,7 +51,7 @@ def cnn_model_fn(features, labels, mode):
       filters=64,
       kernel_size=[5, 5],
       padding="same",
-      activation=tf.nn.relu)
+      activation=tf.nn.leaky_relu)
 
   # Pooling Layer #1
   pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2)
@@ -59,7 +62,7 @@ def cnn_model_fn(features, labels, mode):
       filters=128,
       kernel_size=[5, 5],
       padding="same",
-      activation=tf.nn.relu)
+      activation=tf.nn.leaky_relu)
   pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=2)
 
   # Convolutional Layer #3 and Pooling Layer #3
@@ -68,19 +71,19 @@ def cnn_model_fn(features, labels, mode):
       filters=256,
       kernel_size=[5, 5],
       padding="same",
-      activation=tf.nn.relu)
+      activation=tf.nn.leaky_relu)
   pool3 = tf.layers.max_pooling2d(inputs=conv3, pool_size=[2, 2], strides=2)
 
   # Dense Layer #1
   pool3_flat = tf.reshape(pool3, [-1, 6 * 4 * 256])
-  dense1 = tf.layers.dense(inputs=pool3_flat, units=1024, activation=tf.nn.relu)
+  dense1 = tf.layers.dense(inputs=pool3_flat, units=1024, activation=tf.nn.leaky_relu)
   dropout1 = tf.layers.dropout(
-      inputs=dense1, rate=0.95, training=mode == tf.estimator.ModeKeys.TRAIN)
+      inputs=dense1, rate=0.7, training=mode == tf.estimator.ModeKeys.TRAIN)
 
   # Dense Layer #2
-  dense2 = tf.layers.dense(inputs=dropout1, units=1024, activation=tf.nn.relu)
+  dense2 = tf.layers.dense(inputs=dropout1, units=1024, activation=tf.nn.leaky_relu)
   dropout2 = tf.layers.dropout(
-      inputs=dense2, rate=0.95, training=mode == tf.estimator.ModeKeys.TRAIN)
+      inputs=dense2, rate=0.7, training=mode == tf.estimator.ModeKeys.TRAIN)
 
 #   # Dense Layer #3
 #   dense3 = tf.layers.dense(inputs=dropout2, units=1024, activation=tf.nn.relu)
@@ -106,7 +109,7 @@ def cnn_model_fn(features, labels, mode):
 
   # Configure the Training Op (for TRAIN mode)
   if mode == tf.estimator.ModeKeys.TRAIN:
-    optimizer = tf.train.AdamOptimizer()
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
     train_op = optimizer.minimize(
         loss=loss,
         global_step=tf.train.get_global_step())
