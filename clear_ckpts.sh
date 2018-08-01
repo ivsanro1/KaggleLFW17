@@ -1,0 +1,1 @@
+rm -r faces_convnet_model/* 

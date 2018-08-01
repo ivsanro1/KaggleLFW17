@@ -76,12 +76,19 @@ def cnn_model_fn(features, labels, mode):
 
   # Dense Layer #1
   pool3_flat = tf.reshape(pool3, [-1, 6 * 4 * 256])
-  dense1 = tf.layers.dense(inputs=pool3_flat, units=1024, activation=tf.nn.leaky_relu)
+
+  bn1 = tf.layers.batch_normalization(inputs=pool3_flat)
+  dense1 = tf.layers.dense(inputs=bn1, units=1024, activation=tf.nn.leaky_relu)
+
   dropout1 = tf.layers.dropout(
       inputs=dense1, rate=0.7, training=mode == tf.estimator.ModeKeys.TRAIN)
 
+  
+  bn1 = tf.layers.batch_normalization(inputs=dropout1)
   # Dense Layer #2
-  dense2 = tf.layers.dense(inputs=dropout1, units=1024, activation=tf.nn.leaky_relu)
+  dense2 = tf.layers.dense(inputs=bn1, units=1024, activation=tf.nn.leaky_relu)
+  
+
   dropout2 = tf.layers.dropout(
       inputs=dense2, rate=0.7, training=mode == tf.estimator.ModeKeys.TRAIN)
 
