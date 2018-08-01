@@ -19,29 +19,25 @@ def update_progress(job_title, progress):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-X",
-                    nargs=None,
-                    metavar="path_tr_features",
+parser.add_argument("X",
+                    nargs=1,
+                    metavar="X_path",
                     help="Training data (features). Expected format: .npy")
-parser.add_argument("-y",
-                    nargs=None,
-                    metavar="path_tr_labels",
+parser.add_argument("y",
+                    nargs=1,
+                    metavar="y_path",
                     help="Training data (labels). Expected format: .npy")
 
 parser.add_argument("--validate",
                     action="store_true",
                     help="Also validate the model accuracy when the training finishes.")
-parser.add_argument("validation_split_size",
+parser.add_argument("--validation_split_size",
                     help="percentage of training data that will be used for validation (it will not be used in training)",
-                    const=0.2,
                     nargs='?',
                     type=float)
 
-args_ = parser.parse_args()
-print("args path X: ", args_.X)
-print("args path y: ", args_.y)
-print("validate?: ", args_.validate)
-print("validation_split_size: ", args_.validation_split_size)
+
+
 
 # Called after parse args so if a arg parse error occurs,
 # tf warnings and sklearn deprecation messages do not appear -> clear info
@@ -49,7 +45,6 @@ import tensorflow as tf
 from sklearn.cross_validation import StratifiedShuffleSplit
 
 
-tf.logging.set_verbosity(tf.logging.INFO)
 
 def get_random_rotation(angle):
     return random.uniform(-angle, angle)
@@ -68,7 +63,7 @@ def data_augmentation(features,
                       horizontal_flip_chance=1.,
                       apply_random_rotations=True,
                       rotation_chance=1.,
-                      max_rotation_angle=20):
+                      max_rotation_angle=30):
     aux_features = features[:]
     aux_labels = labels[:]
 
@@ -145,7 +140,7 @@ def cnn_model_fn(features, labels, mode):
   dense1 = tf.layers.dense(inputs=bn1, units=1024, activation=tf.nn.leaky_relu)
 
   dropout1 = tf.layers.dropout(
-      inputs=dense1, rate=0.7, training=mode == tf.estimator.ModeKeys.TRAIN)
+      inputs=dense1, rate=0.725, training=mode == tf.estimator.ModeKeys.TRAIN)
 
   
   bn2 = tf.layers.batch_normalization(inputs=dropout1)
@@ -154,7 +149,7 @@ def cnn_model_fn(features, labels, mode):
   
 
   dropout2 = tf.layers.dropout(
-      inputs=dense2, rate=0.7, training=mode == tf.estimator.ModeKeys.TRAIN)
+      inputs=dense2, rate=0.725, training=mode == tf.estimator.ModeKeys.TRAIN)
 
 #   # Dense Layer #3
 #   dense3 = tf.layers.dense(inputs=dropout2, units=1024, activation=tf.nn.relu)
@@ -197,21 +192,39 @@ def cnn_model_fn(features, labels, mode):
 
 ## START
 def main(unused_argv):
+    args_ = parser.parse_args()
+
+    if (args_.validate and args_.validation_split_size == None):
+        print("\n\nPlease specify a validation split size if you want to validate the model.")
+        sys.exit(0)
+
+    tf.logging.set_verbosity(tf.logging.INFO)
+
     # Load tr data as np
-    X = np.load("data/X_train.npy")
-    y = np.load("data/y_train.npy")
+    X = np.load(args_.X[0])
+    y = np.load(args_.y[0])
 
-    stratSplit = StratifiedShuffleSplit(y, 1, test_size=0.2, random_state=666)
-    StratifiedShuffleSplit(y, n_iter=1, test_size=0.2)
-    for train_idx, test_idx in stratSplit:
-        X_train = X[train_idx]
-        y_train = y[train_idx]
-        X_test  = X[test_idx]
-        y_test  = y[test_idx]
+    X_train = X[:]
+    y_train = y[:]
+
+    if (args_.validate):
+        stratSplit = StratifiedShuffleSplit(y, 1, test_size=args_.validation_split_size, random_state=666)
+        StratifiedShuffleSplit(y, n_iter=1, test_size=args_.validation_split_size)
+        for train_idx, test_idx in stratSplit:
+            X_train = X[train_idx]
+            y_train = y[train_idx]
+            X_test  = X[test_idx]
+            y_test  = y[test_idx]
         
-    X_train, y_train = data_augmentation(X_train, y_train, n_augmentations_per_image=1)
+    X_train, y_train = data_augmentation(X_train,
+                                         y_train,
+                                         n_augmentations_per_image=15,
+                                         max_rotation_angle=30,
+                                         horizontal_flip_chance=0.5,
+                                         rotation_chance=0.95)
 
-    pdb.set_trace()
+    print("training with %d images" % (X_train.shape[0]))
+    # pdb.set_trace()
     # Validate that data is consistent. Each row: one image with a class
     assert (X_train.shape[0] == y_train.shape[0])
 
@@ -239,29 +252,31 @@ def main(unused_argv):
 
     face_classifier.train(
         input_fn=train_input_fn,
-        steps=10000)
+        steps=15000)
     #     hooks=[logging_hook] log training procedure
 
-    # Evaluate the model and print results (TRAINING, to see if it overfits)
-    eval_input_fn_tr = tf.estimator.inputs.numpy_input_fn(
-        x={"x": X_train},
-        y=y_train,
-        num_epochs=1,
-        shuffle=False)
-    eval_results_tr = face_classifier.evaluate(input_fn=eval_input_fn_tr)
-    print("\n\n\n\n\nTRAINING ACC:\n\n\n")
-    print(eval_results_tr)
+    if (args_.validate):
+        # Evaluate the model and print results (TRAINING, to see if it overfits)
+        eval_input_fn_tr = tf.estimator.inputs.numpy_input_fn(
+            x={"x": X_train},
+            y=y_train,
+            num_epochs=1,
+            shuffle=False)
+        eval_results_tr = face_classifier.evaluate(input_fn=eval_input_fn_tr)
+        print("\n\n\n\n\nTRAINING ACC:\n\n\n")
+        print(eval_results_tr)
 
-    print('\n\n\n#################################################\n\n\n')
+        print('\n\n\n#################################################\n\n\n')
 
-    # Evaluate the model and print results (VALIDATION)
-    eval_input_fn_val = tf.estimator.inputs.numpy_input_fn(
-        x={"x": X_test},
-        y=y_test,
-        num_epochs=1,
-        shuffle=False)
-    eval_results_val = face_classifier.evaluate(input_fn=eval_input_fn_val)
-    print("\n\n\n\n\nVALIDATION ACC:\n\n\n")
-    print(eval_results_val)
+        # Evaluate the model and print results (VALIDATION)
+        eval_input_fn_val = tf.estimator.inputs.numpy_input_fn(
+            x={"x": X_test},
+            y=y_test,
+            num_epochs=1,
+            shuffle=False)
+        eval_results_val = face_classifier.evaluate(input_fn=eval_input_fn_val)
+        print("\n\n\n\n\nVALIDATION ACC:\n\n\n")
+        print(eval_results_val)
 
-main(0)
+if __name__ == "__main__":
+    main(0)
