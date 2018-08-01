@@ -151,13 +151,14 @@ def cnn_model_fn(features, labels, mode):
   dropout2 = tf.layers.dropout(
       inputs=dense2, rate=0.725, training=mode == tf.estimator.ModeKeys.TRAIN)
 
-#   # Dense Layer #3
-#   dense3 = tf.layers.dense(inputs=dropout2, units=1024, activation=tf.nn.relu)
-#   dropout3 = tf.layers.dropout(
-#   inputs=dense3, rate=0.75, training=mode == tf.estimator.ModeKeys.TRAIN)
+  bn3 = tf.layers.batch_normalization(inputs=dropout2)
+  # Dense Layer #3
+  dense3 = tf.layers.dense(inputs=bn3, units=1024, activation=tf.nn.relu)
+  dropout3 = tf.layers.dropout(
+      inputs=dense3, rate=0.725, training=mode == tf.estimator.ModeKeys.TRAIN)
 
   # Logits Layer
-  logits = tf.layers.dense(inputs=dropout2, units=7)
+  logits = tf.layers.dense(inputs=dropout3, units=7)
 
   predictions = {
       # Generate predictions (for PREDICT and EVAL mode)
@@ -218,8 +219,8 @@ def main(unused_argv):
         
     X_train, y_train = data_augmentation(X_train,
                                          y_train,
-                                         n_augmentations_per_image=15,
-                                         max_rotation_angle=30,
+                                         n_augmentations_per_image=30,
+                                         max_rotation_angle=20,
                                          horizontal_flip_chance=0.5,
                                          rotation_chance=0.95)
 
@@ -252,7 +253,7 @@ def main(unused_argv):
 
     face_classifier.train(
         input_fn=train_input_fn,
-        steps=15000)
+        steps=30000)
     #     hooks=[logging_hook] log training procedure
 
     if (args_.validate):
