@@ -64,10 +64,21 @@ def data_augmentation(features,
                       apply_random_rotations=True,
                       rotation_chance=1.,
                       max_rotation_angle=30):
-    aux_features = features[:]
-    aux_labels = labels[:]
 
     assert (features.shape[0] == labels.shape[0])
+
+    n_original_images = labels.shape[0]
+    total_images_after_DA = n_original_images + n_original_images * n_augmentations_per_image
+    # preallocate only once
+    aux_features = np.zeros((total_images_after_DA, features.shape[1]), dtype=np.float32)
+    aux_labels   = np.zeros((total_images_after_DA, 1), dtype=np.float32)
+    fill_idx = 0
+
+    # put original data first
+    for i in range(labels.shape[0]):
+        aux_features[fill_idx] = features[i]
+        aux_labels[fill_idx]   = labels[i]
+        fill_idx += 1
 
     for i in range(labels.shape[0]):
         for _ in range(n_augmentations_per_image):
@@ -75,23 +86,21 @@ def data_augmentation(features,
             
 
             if (random.uniform(0, 1) < rotation_chance):
-                # print('deb')
                 augmented_image = apply_random_rotation_fn(augmented_image, max_rotation_angle)
 
 
             if (random.uniform(0, 1) < horizontal_flip_chance):
-                # pdb.set_trace()
-                # print('deb2')
                 augmented_image = apply_horizontal_flip_fn(augmented_image)
             
-            aux_features = np.vstack([aux_features, np.asarray([augmented_image.flatten()])])
-            aux_labels = np.append(aux_labels, labels[i]) # same label obv
+            aux_features[fill_idx] = np.asarray([augmented_image.flatten()])
+            aux_labels[fill_idx]   = labels[i] # same label obv
+            fill_idx += 1
+
 
             update_progress("Performing data augmentation", i/labels.shape[0])
     update_progress("Performing data augmentation", 1)
     
-    return aux_features, aux_labels
-    
+    return aux_features, aux_labels 
 
 
 def cnn_model_fn(features, labels, mode):
@@ -219,8 +228,8 @@ def main(unused_argv):
         
     X_train, y_train = data_augmentation(X_train,
                                          y_train,
-                                         n_augmentations_per_image=30,
-                                         max_rotation_angle=20,
+                                         n_augmentations_per_image=140,
+                                         max_rotation_angle=30,
                                          horizontal_flip_chance=0.5,
                                          rotation_chance=0.95)
 
