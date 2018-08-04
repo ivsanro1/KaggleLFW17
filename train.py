@@ -226,12 +226,13 @@ def main(unused_argv):
             X_test  = X[test_idx]
             y_test  = y[test_idx]
         
+    N_AUGMENTATIONS = 200
     X_train, y_train = data_augmentation(X_train,
                                          y_train,
-                                         n_augmentations_per_image=140,
-                                         max_rotation_angle=30,
+                                         n_augmentations_per_image=N_AUGMENTATIONS,
+                                         max_rotation_angle=27,
                                          horizontal_flip_chance=0.5,
-                                         rotation_chance=0.95)
+                                         rotation_chance=1 - (1.0 / N_AUGMENTATIONS))
 
     print("training with %d images" % (X_train.shape[0]))
     # pdb.set_trace()
