@@ -1,0 +1,74 @@
+python3 src/align/align_dataset_mtcnn.py \
+/tmp/lfw17/ \
+/tmp/lfw17/faces_photos_mtcnnpy_182 \
+--image_size 182 \
+--margin 44
+
+
+
+        vv src
+python3 ../classifier.py TRAIN \
+/tmp/lfw17/faces_photos_mtcnnpy_182 \
+../models/20180402-114759/20180402-114759.pb \
+../models/lfw_classifier.pkl \
+--batch_size 32 \
+--min_nrof_images_per_class 1 \
+--nrof_train_images_per_class 666 \
+--use_split_dataset
+
+        vv src
+python3 ../classifier.py CLASSIFY \
+/tmp/lfw17/faces_photos_mtcnnpy_182 \
+../models/20180402-114759/20180402-114759.pb \
+../models/lfw_classifier.pkl \
+--batch_size 1000
+
+
+
+
+
+###################
+#### INFERENCE ####
+###################
+
+python3 src/align/align_dataset_mtcnn.py \
+/tmp/lfw17-test/ \
+/tmp/lfw17-test/aligned \
+--image_size 182 \
+--margin 44
+
+        vv src
+python3 ../classifier.py TRAIN \
+/tmp/lfw17/faces_photos \
+../models/20180402-114759/20180402-114759.pb \
+../models/lfw_classifier.pkl \
+--batch_size 32 \
+--min_nrof_images_per_class 1 \
+--nrof_train_images_per_class 400 \
+--use_split_dataset
+
+        vv src
+python3 ../classifier.py CLASSIFY \
+/tmp/lfw17/faces_photos \
+../models/20180402-114759/20180402-114759.pb \
+../models/lfw_classifier.pkl \
+--batch_size 32
+
+
+
+
+python3 ../submit.py CLASSIFY \
+/tmp/lfw17-test/aligned/faces_photos-test \
+../models/20180402-114759/20180402-114759.pb \
+../models/lfw_classifier.pkl \
+--batch_size 32
+
+
+
+python3 ../classifier.py TRAIN \
+/tmp/lfw17-augmented/faces_photos \
+../models/20180402-114759/20180402-114759.pb \
+../models/lfw_classifier.pkl \
+--batch_size 32 \
+--min_nrof_images_per_class 1 \
+--nrof_train_images_per_class 400 \
