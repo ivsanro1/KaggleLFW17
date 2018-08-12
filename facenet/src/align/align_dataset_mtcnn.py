@@ -32,9 +32,11 @@ import argparse
 import tensorflow as tf
 import numpy as np
 import detect_face
-import facenet
 import random
 from time import sleep
+
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+import facenet
 
 def main(args):
     sleep(random.random())

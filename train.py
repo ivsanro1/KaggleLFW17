@@ -226,7 +226,7 @@ def main(unused_argv):
             X_test  = X[test_idx]
             y_test  = y[test_idx]
         
-    N_AUGMENTATIONS = 200
+    N_AUGMENTATIONS = 2
     X_train, y_train = data_augmentation(X_train,
                                          y_train,
                                          n_augmentations_per_image=N_AUGMENTATIONS,

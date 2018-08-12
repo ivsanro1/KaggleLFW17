@@ -119,9 +119,9 @@ def main(args):
                 #     print('%s  %s: %.3f' % (paths[i], class_names[best_class_indices[i]], best_class_probabilities[i]))
 
                 #print per name
-                for i in range(len(best_class_indices)):
-                    print('%s  %s: %.3f (best class index: %d, class name of that index: %s, ' % 
-                            (paths[i], class_names[best_class_indices[i]], best_class_probabilities[i]), best_class_indices[i], class_names[best_class_indices[i]])
+                # for i in range(len(best_class_indices)):
+                #     print('%s  %s: %.3f (best class index: %d, class name of that index: %s, ' % 
+                #             (paths[i], class_names[best_class_indices[i]], best_class_probabilities[i]), best_class_indices[i], class_names[best_class_indices[i]])
 
                     
                 
