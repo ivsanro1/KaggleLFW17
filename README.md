@@ -49,7 +49,10 @@ $ python3 infer_test_and_create_submission_file.py data/X_test.npy
 
 This will create your submission file `submission.csv`, ready to be uploaded to Kaggle. My best score with this approach is 0.95031 F-score in the Kaggle Public test split and **0.95652 in the Kaggle Private test split**.
 
+# Simple CNN Results 
+![Alt text](https://i.gyazo.com/e383d8ffbd16e498c95cd269340144e0.png "Simple CNN Results")
 
+https://i.gyazo.com/e383d8ffbd16e498c95cd269340144e0.png
 ## Method 2. Transfer learning on Inception v3 trained with ImageNet
 Dependencies:
 - [TF Slim](https://github.com/tensorflow/models/tree/master/research/slim). If you have errors or issues wrt slim (cannot import models or slim is not found), try [this](https://github.com/tensorflow/models/issues/1842).
@@ -174,6 +177,6 @@ facenet/src/models/lfw_classifier.pkl \
 
 This will create your submission file `submission.csv`, ready to be uploaded to Kaggle. My best score with this approach is 0.96894 F-score in the Kaggle Public test split and **0.98757 in the Kaggle Private test split**.
 
-# Results
-![Alt text](https://i.gyazo.com/c1df2e6fa94c8f873a1233f3c3081fb4.png "Optional title")
+# FaceNet Results
+![Alt text](https://i.gyazo.com/c1df2e6fa94c8f873a1233f3c3081fb4.png "FaceNet Results")
 
