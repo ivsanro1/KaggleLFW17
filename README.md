@@ -173,3 +173,7 @@ facenet/src/models/lfw_classifier.pkl \
 ```
 
 This will create your submission file `submission.csv`, ready to be uploaded to Kaggle. My best score with this approach is 0.96894 F-score in the Kaggle Public test split and **0.98757 in the Kaggle Private test split**.
+
+# Results
+![Alt text](https://i.gyazo.com/c1df2e6fa94c8f873a1233f3c3081fb4.png "Optional title")
+
